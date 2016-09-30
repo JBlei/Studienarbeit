@@ -51,11 +51,13 @@ float alpha             /* in     : smoothness weight                        */
 int   i,j;              /* loop variables                                    */
 float hx_2,hy_2;        /* time saver variables                              */
 float xp,xm,yp,ym;      /* neighbourhood weights                             */
+float xpp, xmm, ypp, ymm;
 float sum;              /* central weight                                    */      
 float **u_old;          /* x-component from old time step                    */
 float **v_old;          /* y-component from old time step                    */
                         /*****************************************************/
 float omega = 1.96;
+int choice;
 
 /* define time saver variables */
 hx_2=alpha/(hx*hx);
@@ -74,7 +76,7 @@ copy_matrix_2d(v,v_old,nx,ny,bx,by);
 set_bounds_2d(u_old,nx,ny,bx,by,0.0);
 set_bounds_2d(v_old,nx,ny,bx,by,0.0);
 
-
+choice = 2;
 /* Jacobi iteration */
 for(i=bx;i<nx+bx;i++)
     for(j=by;j<ny+by;j++)
@@ -89,30 +91,51 @@ for(i=bx;i<nx+bx;i++)
 	    xm = (i >= bx+1)*(alpha/(hx*hx));
 	    yp = (j <= ny+by-2)*(alpha/(hy*hy));
 	    ym = (j >= by+1)*(alpha/(hx*hx));
+	    
+	    xpp = (i <= nx+bx-3)*(alpha/2*(hx*hx));
+	    xmm = (i >= bx+2)*(alpha/2*(hx*hx));
+	    ypp = (j <= ny+by-3)*(alpha/2*(hy*hy));
+	    ymm = (j >= by+2)*(alpha/2*(hx*hx));
 
 		/* compute the sum of weights */
-		sum = xp + xm + yp + ym;
-		/* ------------------------------------------------------------ */
-
-	/* perform iteration */
-
-        /* TODO
-         ----- fill in your code for the HS Jacobi iteration here ----
-        */
-        	u[i][j] = (1.0-omega)*u[i][j] +  
+		//sum = xp + xm + yp + ym;
+		
+		switch (choice)
+		{
+          case 1:
+             //printf("Erste Konsistenzordnung ... ");
+             sum = xp + xm + yp + ym;
+             u[i][j] = (1.0-omega)*u[i][j] +  
 						    omega*((-J_13 [i][j]-J_12 [i][j]*v[i][j]+xp*u[i+1][j]+xm*u[i-1][j]+yp*u[i][j+1]+ym*u[i][j-1])
 													  /(J_11[i][j]+sum));
-			v[i][j] = (1.0-omega)*v[i][j] +  
+			 v[i][j] = (1.0-omega)*v[i][j] +  
 							omega*((-J_23 [i][j]-J_12 [i][j]*u[i][j]+xp*v[i+1][j]+xm*v[i-1][j]+yp*v[i][j+1]+ym*v[i][j-1])
 													  /(J_22[i][j]+sum));	
-		/* ------------------------------------------------------------ */
-
+             break;
+          case 2:
+             //printf("Zweite Konsistenzordnung ... ");
+             sum = xpp + xmm + ypp + ymm;
+             u[i][j] = (1.0-omega)*u[i][j] +  
+						    omega*((-J_13 [i][j]-J_12 [i][j]*v[i][j]+xpp*u[i+2][j]+xmm*u[i-2][j]+ypp*u[i][j+2]+ymm*u[i][j-2])
+													  /(J_11[i][j]+sum));
+			 v[i][j] = (1.0-omega)*v[i][j] +  
+							omega*((-J_23 [i][j]-J_12 [i][j]*u[i][j]+xpp*v[i+2][j]+xmm*v[i-2][j]+ypp*v[i][j+2]+ymm*v[i][j-2])
+													  /(J_22[i][j]+sum));
+             break;
+          case 3:
+             //printf("Dritte Konsistenzordnung ... ");
+             break;
+          case 4:
+             //printf("Vierte Konsistenzordnung ... ");
+             break;
+          default:
+             //printf("Default ");
+             break;
+		}
 	}
 
 /* free memory */
-FREE_MATRIX(2, nx+2*bx, ny+2*by, 
-	    u_old,
-	    v_old);
+FREE_MATRIX(2, nx+2*bx, ny+2*by, u_old, v_old);
 }
 
 
