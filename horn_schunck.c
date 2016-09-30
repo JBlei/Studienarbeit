@@ -20,7 +20,9 @@
 
 
 /* ------------------------------------------------------------------------- */
-
+/*
+ Computes one Jacobi iteration
+*/
 void horn_schunck_jacobi
 (
                         /*****************************************************/
@@ -42,9 +44,7 @@ float alpha             /* in     : smoothness weight                        */
                         /*****************************************************/
 )
 
-/*
- Computes one Jacobi iteration
-*/
+
 
 {
                         /*****************************************************/
@@ -55,7 +55,7 @@ float sum;              /* central weight                                    */
 float **u_old;          /* x-component from old time step                    */
 float **v_old;          /* y-component from old time step                    */
                         /*****************************************************/
-
+float omega = 1.96;
 
 /* define time saver variables */
 hx_2=alpha/(hx*hx);
@@ -83,11 +83,15 @@ for(i=bx;i<nx+bx;i++)
 	
         /* TODO
           ----- fill in your code for computing the neighbourhood weights
-                here - do not forget the correct boundary conditions  ----
+                here - do not forget the correct boundary conditions  ----    
 	    */
+	    xp = (i <= nx+bx-2)*(alpha/(hx*hx));
+	    xm = (i >= bx+1)*(alpha/(hx*hx));
+	    yp = (j <= ny+by-2)*(alpha/(hy*hy));
+	    ym = (j >= by+1)*(alpha/(hx*hx));
 
 		/* compute the sum of weights */
-		
+		sum = xp + xm + yp + ym;
 		/* ------------------------------------------------------------ */
 
 	/* perform iteration */
@@ -95,7 +99,12 @@ for(i=bx;i<nx+bx;i++)
         /* TODO
          ----- fill in your code for the HS Jacobi iteration here ----
         */
-        		
+        	u[i][j] = (1.0-omega)*u[i][j] +  
+						    omega*((-J_13 [i][j]-J_12 [i][j]*v[i][j]+xp*u[i+1][j]+xm*u[i-1][j]+yp*u[i][j+1]+ym*u[i][j-1])
+													  /(J_11[i][j]+sum));
+			v[i][j] = (1.0-omega)*v[i][j] +  
+							omega*((-J_23 [i][j]-J_12 [i][j]*u[i][j]+xp*v[i+1][j]+xm*v[i-1][j]+yp*v[i][j+1]+ym*v[i][j-1])
+													  /(J_22[i][j]+sum));	
 		/* ------------------------------------------------------------ */
 
 	}
@@ -158,7 +167,9 @@ for(i=bx;i<nx+bx;i++)
         /* TODO
          ----- fill in your code for computing the derivatives here ----
         */
-		
+		fx = 0.5*((f2 [i+1] [j]- f2[i-1][j]) + (f1 [i+1] [j]- f1[i-1][j]))*hx_1;
+		fy = 0.5*((f2 [i] [j+1]- f2[i][j-1]) + (f1 [i] [j+1]- f1[i][j-1]))*hy_1;
+		ft = f2 [i][j] - f1 [i][j];
 		/* ------------------------------------------------------------ */
 
 	/* set up motion tensor */
@@ -166,7 +177,12 @@ for(i=bx;i<nx+bx;i++)
         /* TODO
          ----- fill in your code for the motion tensor entries here  ----
         */
-		
+		J_11 [i][j] = fx*fx;
+		J_22 [i][j] = fy*fy;
+		J_33 [i][j] = ft*ft;
+		J_12 [i][j] = fx*fy;
+		J_13 [i][j] = fx*ft;
+		J_23 [i][j] = fy*ft;
 		/* ------------------------------------------------------------ */
 	
     }
