@@ -52,6 +52,9 @@ int   i,j;              /* loop variables                                    */
 float hx_2,hy_2;        /* time saver variables                              */
 float xp,xm,yp,ym;      /* neighbourhood weights                             */
 float xpp, xmm, ypp, ymm;
+
+float x1p, x2p, x3p, x4p, x1m, x2m, x3m, x4m;
+float y1p, y2p, y3p, y4p, y1m, y2m, y3m, y4m;
 float sum;              /* central weight                                    */      
 float **u_old;          /* x-component from old time step                    */
 float **v_old;          /* y-component from old time step                    */
@@ -76,8 +79,8 @@ copy_matrix_2d(v,v_old,nx,ny,bx,by);
 set_bounds_2d(u_old,nx,ny,bx,by,0.0);
 set_bounds_2d(v_old,nx,ny,bx,by,0.0);
 
-choice = 2;
-/* Jacobi iteration */
+choice = 4;
+/* SOR iteration */
 for(i=bx;i<nx+bx;i++)
     for(j=by;j<ny+by;j++)
     {
@@ -92,10 +95,33 @@ for(i=bx;i<nx+bx;i++)
 	    yp = (j <= ny+by-2)*(alpha/(hy*hy));
 	    ym = (j >= by+1)*(alpha/(hx*hx));
 	    
+	    ////////////////////////////////////////
 	    xpp = (i <= nx+bx-3)*(alpha/2*(hx*hx));
 	    xmm = (i >= bx+2)*(alpha/2*(hx*hx));
 	    ypp = (j <= ny+by-3)*(alpha/2*(hy*hy));
 	    ymm = (j >= by+2)*(alpha/2*(hx*hx));
+	    
+	    ////////////////////////////////////////////
+	    x2p = ((i >= 2) && (i <=nx+bx-4))*(alpha*(64/(144*(hx*hx))));
+	    x4p = (i <= nx+bx-5)*(alpha/(144*(hx*hx)));
+	    x2m = ((i >= 4) && (i <= nx+bx-2))*(alpha*(64/(144*(hx*hx))));
+	    x4m = (i >= 5)*(alpha/(144*(hx*hx)));
+	    
+	    x3p = -(1./8.)*x2p + 8*x4p;
+	    x1p = (1./8.)*x2m + 8*x4p;
+	    x3m = -(1./8.)*x2m + 8*x4m;
+	    x1m = (1./8.)*x2p + 8*x4m;
+	    
+	    y2p = ((j >= 2) && (j <=ny+by-4))*(alpha*(64/(144*(hy*hy))));
+	    y4p = (j <= ny+by-5)*(alpha/(144*(hy*hy)));
+	    y2m = ((j >= 4) && (j <= ny+by-2))*(alpha*(64/(144*(hy*hy))));
+	    y4m = (j >= 5)*(alpha/(144*(hy*hy)));
+	    
+	    y3p = -(1./8.)*y2p + 8*y4p;
+	    y1p = (1./8.)*y2m + 8*y4p;
+	    y3m = -(1./8.)*y2m + 8*y4m;
+	    y1m = (1./8.)*y2p + 8*y4m;
+	    
 
 		/* compute the sum of weights */
 		//sum = xp + xm + yp + ym;
@@ -127,6 +153,21 @@ for(i=bx;i<nx+bx;i++)
              break;
           case 4:
              //printf("Vierte Konsistenzordnung ... ");
+             sum = x2p + x4p + x2m +x4m + y2p +y4p +y2m + y4m;
+             u[i][j] = (1.0-omega)*u[i][j] +  
+						    omega*((-J_13 [i][j]-J_12 [i][j]*v[i][j]+x4m*u[i-4][j]+x3m*u[i-3][j]+x2m*u[i-2][j]+x1m*u[i-1][j]+
+																	 x1p*u[i+1][j]+x2p*u[i+2][j]+x3p*u[i+3][j]+x4p*u[i+4][j]+
+																	 y4m*u[i][j-4]+y3m*u[i][j-3]+y2m*u[i][j-2]+y1m*u[i][j-1]+
+																	 y1p*u[i][j+1]+y2p*u[i][j+2]+y3p*u[i][j+3]+y4p*u[i][j+4])
+													  /(J_11[i][j]+sum));
+			 v[i][j] = (1.0-omega)*v[i][j] +  
+						    omega*((-J_23 [i][j]-J_12 [i][j]*u[i][j]+x4m*v[i-4][j]+x3m*v[i-3][j]+x2m*v[i-2][j]+x1m*v[i-1][j]+
+																	 x1p*v[i+1][j]+x2p*v[i+2][j]+x3p*v[i+3][j]+x4p*v[i+4][j]+
+																	 y4m*v[i][j-4]+y3m*v[i][j-3]+y2m*v[i][j-2]+y1m*v[i][j-1]+
+																	 y1p*v[i][j+1]+y2p*v[i][j+2]+y3p*v[i][j+3]+y4p*v[i][j+4])
+													  /(J_22[i][j]+sum));
+										  
+			 
              break;
           default:
              //printf("Default ");
