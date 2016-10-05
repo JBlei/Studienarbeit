@@ -154,7 +154,7 @@ for(i=bx;i<nx+bx;i++)
           case 4:
              //printf("Vierte Konsistenzordnung ... ");
              sum = x2p + x4p + x2m +x4m + y2p +y4p +y2m + y4m;
-             u[i][j] = (1.0-omega)*u[i][j] +  
+             /*u[i][j] = (1.0-omega)*u[i][j] +  
 						    omega*((-J_13 [i][j]-J_12 [i][j]*v[i][j]+x4m*u[i-4][j]+x3m*u[i-3][j]+x2m*u[i-2][j]+x1m*u[i-1][j]+
 																	 x1p*u[i+1][j]+x2p*u[i+2][j]+x3p*u[i+3][j]+x4p*u[i+4][j]+
 																	 y4m*u[i][j-4]+y3m*u[i][j-3]+y2m*u[i][j-2]+y1m*u[i][j-1]+
@@ -165,7 +165,18 @@ for(i=bx;i<nx+bx;i++)
 																	 x1p*v[i+1][j]+x2p*v[i+2][j]+x3p*v[i+3][j]+x4p*v[i+4][j]+
 																	 y4m*v[i][j-4]+y3m*v[i][j-3]+y2m*v[i][j-2]+y1m*v[i][j-1]+
 																	 y1p*v[i][j+1]+y2p*v[i][j+2]+y3p*v[i][j+3]+y4p*v[i][j+4])
-													  /(J_22[i][j]+sum));
+													  /(J_22[i][j]+sum));*/
+													  
+			 u[i][j] =(-J_13 [i][j]-J_12 [i][j]*v_old[i][j]+x4m*u_old[i-4][j]+x3m*u_old[i-3][j]+x2m*u_old[i-2][j]+x1m*u_old[i-1][j]+
+																	 x1p*u_old[i+1][j]+x2p*u_old[i+2][j]+x3p*u_old[i+3][j]+x4p*u_old[i+4][j]+
+																	 y4m*u_old[i][j-4]+y3m*u_old[i][j-3]+y2m*u_old[i][j-2]+y1m*u_old[i][j-1]+
+																	 y1p*u_old[i][j+1]+y2p*u_old[i][j+2]+y3p*u_old[i][j+3]+y4p*u_old[i][j+4])
+													  /(J_11[i][j]+sum);
+			 v[i][j] = (-J_23 [i][j]-J_12 [i][j]*u_old[i][j]+x4m*v_old[i-4][j]+x3m*v_old[i-3][j]+x2m*v_old[i-2][j]+x1m*v_old[i-1][j]+
+																	 x1p*v_old[i+1][j]+x2p*v_old[i+2][j]+x3p*v_old[i+3][j]+x4p*v_old[i+4][j]+
+																	 y4m*v_old[i][j-4]+y3m*v_old[i][j-3]+y2m*v_old[i][j-2]+y1m*v_old[i][j-1]+
+																	 y1p*v_old[i][j+1]+y2p*v_old[i][j+2]+y3p*v_old[i][j+3]+y4p*v_old[i][j+4])
+													  /(J_22[i][j]+sum);										  
 										  
 			 
              break;
